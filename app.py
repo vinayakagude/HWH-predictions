@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import h2o
 
+import os
+os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-11-openjdk-amd64"
+
 # Initialize the H2O cluster (if not already running)
 h2o.init()
 
