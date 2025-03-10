@@ -11,7 +11,7 @@ h2o.init()
 # ------------------------------------------------------------------
 # Load your trained deep learning model that predicts "grad"
 # Replace with the actual model path from when you saved your model.
-model_path = "path/to/your/dl_model"  # e.g., "./models/dl_model"
+model_path = "Grad"
 try:
     dl_model = h2o.load_model(model_path)
 except Exception as e:
