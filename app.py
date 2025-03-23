@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import h2o
+from sklearn.preprocessing import StandardScaler
+
 
 import os
 os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-11-openjdk-amd64"
@@ -59,15 +61,30 @@ for i, feature in enumerate(input_features):
 
 st.markdown("---")
 
+
+
+
 # When the "Predict" button is pressed, perform the prediction.
 if st.button("Predict"):
     # Convert the inputs to a pandas DataFrame.
     input_df = pd.DataFrame([input_data])
+    input_df_scaled = input_df.copy()
+    input_df_scaled.columns = [
+        f"ssf_initial:{col}" if col != "Age_Start" else col for col in input_df.columns
+    ]
+    scaler = StandardScaler()
+    
+    # Apply the standard scaler
+    input_df_scaled[feature_columns] = scaler.transform(input_df_scaled[feature_columns])
+
+    # Convert to H2OFrame
+    h2o_input = h2o.H2OFrame(input_df_scaled)
+    
     st.markdown("### Input Data")
     st.write(input_df)
     
     # Convert the DataFrame to an H2OFrame.
-    h2o_input = h2o.H2OFrame(input_df)
+    h2o_input = h2o.H2OFrame(input_df_scaled)
     
     # Make the prediction using your loaded deep learning model.
     prediction = dl_model.predict(h2o_input)
