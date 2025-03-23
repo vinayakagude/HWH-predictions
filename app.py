@@ -51,10 +51,11 @@ input_data = {}
 # Arrange the 12 sliders into 3 columns for a cleaner layout.
 cols = st.columns(3)
 for i, feature in enumerate(input_features):
-    # Determine which column to use.
     col = cols[i % 3]
-    # Use a slider with a range from 1 to 5, defaulting to 3.
-    input_data[feature] = col.slider(feature, min_value=1, max_value=5, value=3)
+    if feature == "Age_Start":
+        input_data[feature] = col.number_input(feature, min_value=18, max_value=100, value=25, step=1)
+    else:
+        input_data[feature] = col.slider(feature, min_value=1, max_value=5, value=3)
 
 st.markdown("---")
 
