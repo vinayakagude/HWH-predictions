@@ -1,3 +1,4 @@
 streamlit
 h2o
 pandas
+openpyxl
