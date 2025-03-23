@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import h2o
-from h2o.estimators import H2OMOJOModel
 
 import os
 os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-11-openjdk-amd64"
@@ -14,12 +13,11 @@ h2o.init()
 # Replace with the actual model path from when you saved your model.
 model_path = "DeepLearning_model_python_1742729893668_59.zip"
 try:
-    dl_model = H2OMOJOModel.load_mojo(model_path)
-    st.success("Model loaded successfully!")
+    dl_model = h2o.import_mojo(model_path)
+    st.success("MOJO model loaded successfully!")
 except Exception as e:
-    st.error(f"Error loading the model from {model_path}: {e}")
+    st.error(f"Error loading the MOJO model from {model_path}: {e}")
     st.stop()
-
 # ------------------------------------------------------------------
 # Set up page configuration for a cleaner look.
 st.set_page_config(page_title="Grad Predictor", layout="wide")
