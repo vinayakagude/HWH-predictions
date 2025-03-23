@@ -75,3 +75,33 @@ if st.button("Predict"):
     
     st.markdown("### Prediction for 'grad'")
     st.write(prediction_df)
+
+import pandas as pd
+
+st.markdown("## 🔍 Explore Test Cases")
+
+# Load the test cases Excel file
+file_path = "results (4).xlsx"  # If using relative path on deployment
+try:
+    xls = pd.ExcelFile(file_path)
+    df_test_cases = xls.parse('Sheet1')
+    
+    # Optional: Rename for clarity
+    df_display = df_test_cases.rename(columns={
+        "predict": "Actual",
+        "p1": "Model Probability (grad=1)"
+    })
+
+    # Show interactive table
+    st.dataframe(df_display[[
+        "ssf_initial:adult_education", "ssf_initial:child_care", "ssf_initial:community",
+        "ssf_initial:employment", "ssf_initial:housing", "ssf_initial:income",
+        "ssf_initial:math_skills", "ssf_initial:mental_health", "ssf_initial:reading_skills",
+        "ssf_initial:social", "ssf_initial:substance_abuse", "Age_Start",
+        "Actual", "Model Probability (grad=1)"
+    ]], use_container_width=True)
+
+    st.caption("Compare model predictions against actual values for each test case.")
+
+except Exception as e:
+    st.error(f"Could not load or parse test case file: {e}")
