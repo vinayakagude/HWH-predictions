@@ -11,6 +11,16 @@ h2o.init()
 # ------------------------------------------------------------------
 # Load your trained deep learning model that predicts "grad"
 # Replace with the actual model path from when you saved your model.
+
+    
+    
+# ------------------------------------------------------------------
+# Set up page configuration for a cleaner look.
+st.set_page_config(page_title="Grad Predictor", layout="wide")
+st.title("Grad Predictor")
+st.markdown("Provide your inputs on a scale of **1 to 5** to predict the value of **grad**.")
+
+
 model_path = "DeepLearning_model_python_1742729893668_59.zip"
 try:
     dl_model = h2o.import_mojo(model_path)
@@ -18,12 +28,7 @@ try:
 except Exception as e:
     st.error(f"Error loading the MOJO model from {model_path}: {e}")
     st.stop()
-# ------------------------------------------------------------------
-# Set up page configuration for a cleaner look.
-st.set_page_config(page_title="Grad Predictor", layout="wide")
-st.title("Grad Predictor")
-st.markdown("Provide your inputs on a scale of **1 to 5** to predict the value of **grad**.")
-
+    
 # Define the input feature names (without the "ssf_initial:" prefix)
 input_features = [
     "adult_education",
