@@ -31,19 +31,27 @@ try:
     xls = pd.ExcelFile(file_path)
     df_test_cases = xls.parse('Sheet1')
 
+    st.write("📂 Loaded Test Case Data:")  # Debugging step
+    st.dataframe(df_test_cases)  # Show the raw test case data
+
+    # Rename columns for consistency
+    df_test_cases = df_test_cases.rename(columns={"predict": "Actual", "p1": "Model Probability (grad=1)"})
+
     # Extract feature columns
     feature_columns = [f"ssf_initial:{col}" if col != "Age_Start" else col for col in input_features]
     
-    # Rename columns for consistency
-    df_test_cases = df_test_cases.rename(columns={"predict": "Actual", "p1": "Model Probability (grad=1)"})
+    # Verify feature columns exist
+    missing_features = [col for col in feature_columns if col not in df_test_cases.columns]
+    if missing_features:
+        st.error(f"Missing columns in test data: {missing_features}")
+        st.stop()
 
     # Prepare dataset for scaling
     df_features = df_test_cases[feature_columns]
 
     # Ensure scaler is fitted before use
     scaler = StandardScaler()
-    if not hasattr(scaler, "mean_"):  # Check if the scaler is already fitted
-        scaler.fit(df_features)  # Fit on test data
+    scaler.fit(df_features)  # Fit on test data
 
     # Transform test cases
     df_scaled = pd.DataFrame(scaler.transform(df_features), columns=feature_columns)
@@ -53,6 +61,12 @@ try:
 
     # Run batch predictions
     predictions = dl_model.predict(h2o_test_data).as_data_frame()
+    
+    # Ensure predictions were generated
+    if predictions.empty:
+        st.error("❌ No predictions were generated.")
+        st.stop()
+
     df_test_cases["Predicted"] = predictions["predict"]
 
     # Compare actual vs predicted
@@ -86,18 +100,14 @@ for i, feature in enumerate(input_features):
 input_df = pd.DataFrame([input_data])
 input_df.columns = [f"ssf_initial:{col}" if col != "Age_Start" else col for col in input_df.columns]
 
-# **Ensure scaler is fitted before transformation**
-if not hasattr(scaler, "mean_"):  
-    st.error("Scaler is not fitted. Please check the test case data.")
-else:
-    # Apply scaling to user input
-    input_df_scaled = pd.DataFrame(scaler.transform(input_df), columns=feature_columns)
+# Apply scaling to user input
+input_df_scaled = pd.DataFrame(scaler.transform(input_df), columns=feature_columns)
 
-    # Convert to H2OFrame
-    h2o_input = h2o.H2OFrame(input_df_scaled)
+# Convert to H2OFrame
+h2o_input = h2o.H2OFrame(input_df_scaled)
 
-    # Predict when button is clicked
-    if st.button("Predict"):
-        prediction = dl_model.predict(h2o_input).as_data_frame()
-        st.markdown("### 🎯 Prediction for 'grad'")
-        st.write(prediction)
+# Predict when button is clicked
+if st.button("Predict"):
+    prediction = dl_model.predict(h2o_input).as_data_frame()
+    st.markdown("### 🎯 Prediction for 'grad'")
+    st.write(prediction)
