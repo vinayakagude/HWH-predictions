@@ -54,6 +54,7 @@ input_data = {}
 cols = st.columns(3)
 for i, feature in enumerate(input_features):
     col = cols[i % 3]
+
     if feature == "Age_Start":
         input_data[feature] = col.number_input(feature, min_value=18, max_value=100, value=25, step=1)
     else:
@@ -73,7 +74,8 @@ if st.button("Predict"):
         f"ssf_initial:{col}" if col != "Age_Start" else col for col in input_df.columns
     ]
     scaler = StandardScaler()
-    
+    feature_columns = [f"ssf_initial:{col}" if col != "Age_Start" else col for col in input_features]
+
     # Apply the standard scaler
     input_df_scaled[feature_columns] = scaler.transform(input_df_scaled[feature_columns])
 
