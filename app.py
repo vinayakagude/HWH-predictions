@@ -4,80 +4,68 @@ import h2o
 from sklearn.preprocessing import StandardScaler
 import os
 
-# Ensure Java is set for H2O
+# Set Java path for H2O (Modify if needed)
 os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-11-openjdk-amd64"
 
 # Initialize H2O
 h2o.init()
 
-# Streamlit app setup
-st.set_page_config(page_title="Grad Predictor", layout="wide")
-st.title("🎓 Grad Predictor")
-
-# Load trained deep learning model
+# Load trained H2O model
 model_path = "DeepLearning_model_python_1742729893668_59.zip"
 try:
     dl_model = h2o.import_mojo(model_path)
-    st.success("✅ MOJO model loaded successfully!")
+    st.success("✅ Model loaded successfully!")
 except Exception as e:
-    st.error(f"❌ Error loading MOJO model: {e}")
+    st.error(f"❌ Error loading model: {e}")
     st.stop()
 
-# Upload test case file
-st.markdown("## 📂 Upload Test Cases (Excel)")
-uploaded_file = st.file_uploader("Upload results (4).xlsx", type=["xlsx"])
+# Define input features
+input_features = [
+    "adult_education", "child_care", "community", "employment", "housing",
+    "income", "math_skills", "mental_health", "reading_skills", "social",
+    "substance_abuse", "Age_Start"
+]
 
-if uploaded_file:
+# Streamlit UI
+st.set_page_config(page_title="Grad Predictor", layout="wide")
+st.title("🎓 Grad Predictor")
+
+st.markdown("Provide inputs on a scale of **1 to 5** (except Age).")
+
+# Create user input sliders
+input_data = {}
+cols = st.columns(3)
+for i, feature in enumerate(input_features):
+    col = cols[i % 3]
+    if feature == "Age_Start":
+        input_data[feature] = col.number_input("Age", min_value=18, max_value=100, value=25, step=1)
+    else:
+        input_data[feature] = col.slider(feature.replace("_", " ").title(), min_value=1, max_value=5, value=3)
+
+st.markdown("---")
+
+# Prediction button
+if st.button("Predict"):
     try:
-        # Load Excel file
-        xls = pd.ExcelFile(uploaded_file)
-        df_test_cases = xls.parse("Sheet1")  # Change if your sheet name is different
+        # Convert user inputs to DataFrame
+        input_df = pd.DataFrame([input_data])
 
-        # Display raw data
-        st.write("📊 **Raw Test Case Data:**")
-        st.dataframe(df_test_cases.head())
+        # Standardize column names for H2O model
+        input_df.columns = [f"ssf_initial:{col}" if col != "Age_Start" else col for col in input_df.columns]
 
-        # Drop unnecessary columns
-        df_test_cases = df_test_cases.drop(columns=["Unnamed: 0", "do_not_scale"], errors="ignore")
-
-        # Rename columns for clarity
-        df_test_cases = df_test_cases.rename(columns={"predict": "Actual", "p1": "Model Probability (grad=1)"})
-
-        # Extract features
-        feature_columns = [col for col in df_test_cases.columns if col not in ["Actual", "Model Probability (grad=1)"]]
-
-        # Ensure all features exist
-        missing_features = [col for col in feature_columns if col not in df_test_cases.columns]
-        if missing_features:
-            st.error(f"❌ Missing feature columns: {missing_features}")
-            st.stop()
-
-        # Scale features
+        # Fit and transform using StandardScaler
         scaler = StandardScaler()
-        df_scaled = pd.DataFrame(scaler.fit_transform(df_test_cases[feature_columns]), columns=feature_columns)
+        input_scaled = pd.DataFrame(scaler.fit_transform(input_df), columns=input_df.columns)
 
         # Convert to H2OFrame
-        h2o_test_data = h2o.H2OFrame(df_scaled)
+        h2o_input = h2o.H2OFrame(input_scaled)
 
-        # Make batch predictions
-        predictions = dl_model.predict(h2o_test_data).as_data_frame()
+        # Run prediction
+        prediction = dl_model.predict(h2o_input).as_data_frame()
 
-        # Add predictions to dataframe
-        df_test_cases["Predicted"] = predictions["predict"]
-
-        # Compare Actual vs. Predicted results
-        df_test_cases["Match"] = df_test_cases["Actual"] == df_test_cases["Predicted"]
-
-        # Display processed results with highlights
-        st.markdown("## 📊 Model Performance on Test Cases")
-        st.dataframe(
-            df_test_cases.style.apply(
-                lambda x: ["background-color: lightgreen" if v else "background-color: pink" for v in x["Match"]],
-                axis=0
-            )
-        )
-
-        st.success("✅ Predictions completed successfully!")
+        # Display result
+        st.markdown("### 🎯 Prediction Result")
+        st.write(prediction)
 
     except Exception as e:
-        st.error(f"❌ Error processing file: {e}")
+        st.error(f"❌ Error during prediction: {e}")
