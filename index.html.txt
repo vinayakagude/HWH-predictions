@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Grad Predictor</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: auto; padding: 2rem; }
+    form { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    label { display: block; font-weight: bold; margin-bottom: 0.3rem; }
+    input, select { width: 100%; padding: 0.4rem; }
+    .result { margin-top: 2rem; font-size: 1.2rem; }
+    .submit { grid-column: span 3; text-align: center; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>🎓 Grad Predictor</h1>
+  <form method="POST">
+    {% for feature in features %}
+      <div>
+        <label for="{{ feature }}">{{ feature.replace('_', ' ').title() }}</label>
+        {% if feature == "Age_Start" %}
+          <input type="number" name="{{ feature }}" min="18" max="100" value="25" required>
+        {% else %}
+          <input type="number" name="{{ feature }}" min="1" max="5" value="3" required>
+        {% endif %}
+      </div>
+    {% endfor %}
+    <div class="submit">
+      <button type="submit">Predict</button>
+    </div>
+  </form>
+
+  {% if prediction %}
+    <div class="result">
+      <h2>🎯 Prediction Result</h2>
+      <pre>{{ prediction }}</pre>
+    </div>
+  {% endif %}
+</body>
+</html>
